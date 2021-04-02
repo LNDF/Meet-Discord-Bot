@@ -1,0 +1,19 @@
+{
+  "name": "meetbot",
+  "version": "1.0.0",
+  "description": "Meet Discord bot",
+  "main": "bot/index.js",
+  "scripts": {
+    "start": "node bot/index.js"
+  },
+  "author": "LNDF",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.5.1",
+    "dotenv": "^8.2.0",
+    "pkg-dir": "^5.0.0",
+    "puppeteer": "^8.0.0",
+    "puppeteer-extra": "^3.1.17",
+    "puppeteer-extra-plugin-stealth": "^2.7.5"
+  }
+}
