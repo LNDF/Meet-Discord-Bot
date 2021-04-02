@@ -54,8 +54,9 @@ async function firstLoginSetup(params, message) {
 	}
 	message.channel.send("Trying to log in for the first time...");
 	try {
-		const saveDir = await Meet.login(true);
-		message.channel.send("Logged in and saved to " + saveDir);
+		const page = Meet.makePage();
+		const saveDir = await Meet.login(true, page);
+		message.channel.send("Logged in");
 	} catch {
 		message.channel.send("Couldn't log in for the first time.");
 	}

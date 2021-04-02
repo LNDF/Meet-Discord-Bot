@@ -10,39 +10,55 @@ function pageHasUrl(page, url) {
 	return page.url().indexOf(url) == 0;
 }
 
-async function login(first) {
+async function makePage() {
 	const cwd = await pkgDir() + "/browserData";
-	const browser = await puppeteer.launch({headless: false,
+	const browser = await puppeteer.launch({headless: true,
 											userDataDir: cwd});
+	const userAgent = await browser.userAgent();
+	
 	const context = browser.defaultBrowserContext();
 	context.overridePermissions("https://meet.google.com", ['microphone', "camera"]);
 	const [page] = await browser.pages();
+	await page.setUserAgent(userAgent.replace("Headless", ""));
 	await page.setDefaultNavigationTimeout(0);
+	return page;
+}
+exports.makePage = makePage;
+
+async function savePageState(page) {
+	const screenpath = (await pkgDir()) + "/pageStates/screens/";
+	const htmlpath = (await pkgDir()) + "/pageStates/html/";
+	await fs.promises.mkdir(screenpath, {recursive: true});
+	await fs.promises.mkdir(htmlpath, {recursive: true});
+	await page.screenshot({path: screenpath + "screen_" + Date.now() + ".png"});
+	const htmlContent = await page.evaluate(() => document.documentElement.outerHTML);
+	await fs.promises.writeFile(htmlpath + "html_" + Date.now() + ".html", htmlContent);
+}
+
+async function login(first, page) {
 	await page.goto("https://accounts.google.com/ServiceLogin?passive=true&continue=https://www.google.com/",
 				{waitUntil: "load"});
 	if (pageHasUrl(page, "https://www.google.com/")) {
 		if (first) {
 			await browser.close();
-			return cwd;
 		}
-		return page;
 	}
 	await page.waitForSelector('input[type="email"]');
 	await page.type('input[type="email"]', process.env.DEFAULT_USER);
-	await page.click("#identifierNext");
+	await page.keyboard.press("Enter");
+	//await page.click("#identifierNext");
 	await page.waitForSelector('input[type="password"]', {visible: true});
 	await page.type('input[type="password"]', process.env.DEFAULT_PASSWORD);
-	await page.waitForSelector("#passwordNext", {visible: true});
-	await page.click("#passwordNext");
+	//await page.waitForSelector("#passwordNext", {visible: true});
+	//await page.click("#passwordNext");
+	await page.keyboard.press("Enter");
 	while (true) {
 		await page.waitForNavigation({waitUntil: "networkidle0"})
 		if (pageHasUrl(page, "https://www.google.com/")) break;
 	}
 	if (first) {
 		await browser.close();
-		return cwd;
 	}
-	return page;
 }
 exports.login = login;
 
@@ -78,9 +94,10 @@ exports.MeetCall = class MeetCall {
 	async join(channel) {
 		try {
 			channel.send("Joining " + this.url);
-			const page = await login(false);
+			const page = await makePage();
 			this.page = page;
 			this.browser = page.browser();
+			await login(false, page);
 			await page.goto(this.url, {waitUntil: "load"});
 			await page.waitForSelector("div.uArJ5e.UQuaGc.Y5sE8d.uyXBBb.xKiqt .NPEfkd.RveJvd.snByac", {visible: true});
 			await injectJS((await pkgDir()) + "/bot/inject/miccamhelper.js", page);
@@ -95,6 +112,7 @@ exports.MeetCall = class MeetCall {
 			channel.send("Joined the meet call with no errors.");
 		} catch (e) {
 			this.leave(channel, true);
+			if (!this.closed) await savePageState(this.page);
 			console.error("Error joining meet call", e.message);
 		}
 	}
