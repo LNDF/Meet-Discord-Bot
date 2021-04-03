@@ -42,6 +42,7 @@ async function login(first, page) {
 		if (first) {
 			await browser.close();
 		}
+		return;
 	}
 	await page.waitForSelector('input[type="email"]');
 	await page.type('input[type="email"]', process.env.DEFAULT_USER);
