@@ -10,6 +10,18 @@ function pageHasUrl(page, url) {
 	return page.url().indexOf(url) == 0;
 }
 
+async function savePageState(page, error = null) {
+	const savepath = (await pkgDir()) + "/pageStates/error_" + Date.now() + "/";
+	await fs.promises.mkdir(screenpath, {recursive: true});
+	await fs.promises.mkdir(htmlpath, {recursive: true});
+	await page.screenshot({path: savepath + "screen.png"});
+	const htmlContent = await page.evaluate(() => document.documentElement.outerHTML);
+	await fs.promises.writeFile(savepath + "document.html", htmlContent);
+	if (error != null) {
+		await fs.promises.writeFile(savepath + "error.txt", error.toString());
+	}
+}
+
 async function makePage() {
 	const cwd = await pkgDir() + "/browserData";
 	const browser = await puppeteer.launch({headless: true,
@@ -24,16 +36,6 @@ async function makePage() {
 	return page;
 }
 exports.makePage = makePage;
-
-async function savePageState(page) {
-	const screenpath = (await pkgDir()) + "/pageStates/screens/";
-	const htmlpath = (await pkgDir()) + "/pageStates/html/";
-	await fs.promises.mkdir(screenpath, {recursive: true});
-	await fs.promises.mkdir(htmlpath, {recursive: true});
-	await page.screenshot({path: screenpath + "screen_" + Date.now() + ".png"});
-	const htmlContent = await page.evaluate(() => document.documentElement.outerHTML);
-	await fs.promises.writeFile(htmlpath + "html_" + Date.now() + ".html", htmlContent);
-}
 
 async function login(first, page) {
 	await page.goto("https://accounts.google.com/ServiceLogin?passive=true&continue=https://www.google.com/",
