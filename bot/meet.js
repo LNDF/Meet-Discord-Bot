@@ -25,8 +25,12 @@ async function savePageState(page, error = null) {
 
 async function makePage() {
 	const cwd = await pkgDir() + "/browserData";
-	const browser = await puppeteer.launch({headless: true,
-											userDataDir: cwd});
+	const puppeteerSettings = {headless: true,
+							   userDataDir: cwd};
+	if (process.env.CHROMIUM_EXECUTABLE != undefined) {
+		puppeteerSettings.executablePath = process.env.CHROMIUM_EXECUTABLE;
+	}
+	const browser = await puppeteer.launch(puppeteerSettings);
 	const userAgent = await browser.userAgent();
 	
 	const context = browser.defaultBrowserContext();
