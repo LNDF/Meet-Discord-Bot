@@ -11,14 +11,15 @@ function pageHasUrl(page, url) {
 }
 
 async function savePageState(page, error = null) {
-	const savepath = (await pkgDir()) + "/pageStates/error_" + Date.now() + "/";
-	await fs.promises.mkdir(screenpath, {recursive: true});
-	await fs.promises.mkdir(htmlpath, {recursive: true});
-	await page.screenshot({path: savepath + "screen.png"});
-	const htmlContent = await page.evaluate(() => document.documentElement.outerHTML);
-	await fs.promises.writeFile(savepath + "document.html", htmlContent);
+	const savepath = (await pkgDir()) + "/errors/error_" + Date.now() + "/";
+	await fs.promises.mkdir(savepath, {recursive: true});
+	if (page != null) {
+		await page.screenshot({path: savepath + "screen.png"});
+		const htmlContent = await page.evaluate(() => document.documentElement.outerHTML);
+		await fs.promises.writeFile(savepath + "document.html", htmlContent);
+	}
 	if (error != null) {
-		await fs.promises.writeFile(savepath + "error.txt", error.toString());
+		await fs.promises.writeFile(savepath + "error.txt", error.stack);
 	}
 }
 
@@ -87,6 +88,8 @@ exports.MeetCall = class MeetCall {
 	joined;
 	closed;
 	constructor(url) {
+		this.browser = null;
+		this.page = null;
 		this.joined = false;
 		this.failed = false;
 		this.closed = false;
@@ -115,7 +118,7 @@ exports.MeetCall = class MeetCall {
 			channel.send("Joined the meet call with no errors.");
 		} catch (e) {
 			this.leave(channel, true);
-			if (!this.closed) await savePageState(this.page);
+			await savePageState(this.page, e);
 			console.error("Error joining meet call", e.message);
 		}
 	}
@@ -128,6 +131,6 @@ exports.MeetCall = class MeetCall {
 		} else {
 			await channel.send("Leaving " + this.url);
 		}
-		await this.browser.close();
+		if (this.browser != null) await this.browser.close();
 	}
 }
