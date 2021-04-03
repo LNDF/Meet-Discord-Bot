@@ -121,8 +121,8 @@ exports.MeetCall = class MeetCall {
 			this.joined = true;
 			channel.send("Joined the meet call with no errors.");
 		} catch (e) {
-			this.leave(channel, true);
 			await savePageState(this.page, e);
+			this.leave(channel, true);
 			console.error("Error joining meet call", e.message);
 		}
 	}
