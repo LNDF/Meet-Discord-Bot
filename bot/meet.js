@@ -38,6 +38,10 @@ async function makePage() {
 	const [page] = await browser.pages();
 	await page.setUserAgent(userAgent.replace("Headless", ""));
 	await page.setDefaultNavigationTimeout(0);
+	await page.setViewport({
+		width: 1920,
+		height: 1080
+	});
 	return page;
 }
 exports.makePage = makePage;
@@ -110,14 +114,12 @@ exports.MeetCall = class MeetCall {
 			await login(false, page);
 			await page.goto(this.url, {waitUntil: "load"});
 			await page.waitForSelector("div.uArJ5e.UQuaGc.Y5sE8d.uyXBBb.xKiqt .NPEfkd.RveJvd.snByac", {visible: true});
-			await injectJS((await pkgDir()) + "/bot/inject/miccamhelper.js", page);
-			await page.click("div.uArJ5e.UQuaGc.Y5sE8d.uyXBBb.xKiqt .NPEfkd.RveJvd.snByac");
+			await injectJS((await pkgDir()) + "/bot/inject/joinhelper.js", page);
 			await page.waitForSelector(".U26fgb.JRY2Pb.mUbCce.kpROve.GaONte.Qwoy0d.ZPasfd.vzpHY", {visible: true});
 			await page.waitForSelector("div.uArJ5e.UQuaGc.kCyAyd.QU4Gid.foXzLb.IeuGXd .NPEfkd.RveJvd.snByac", {visible: true});
-			await page.click("div.uArJ5e.UQuaGc.kCyAyd.QU4Gid.foXzLb.IeuGXd .NPEfkd.RveJvd.snByac");
-			await page.waitForSelector("h4.XIsaqe.isOLae", {visible: true});
 			await page.exposeFunction("meetBotParticipantsUpdate", p => {this.participants = p});
 			await injectJS((await pkgDir()) + "/bot/inject/meetdatahelper.js", page);
+			await page.waitForSelector("h4.XIsaqe.isOLae", {visible: true});
 			this.joined = true;
 			channel.send("Joined the meet call with no errors.");
 		} catch (e) {
@@ -135,6 +137,10 @@ exports.MeetCall = class MeetCall {
 		} else {
 			await channel.send("Leaving " + this.url);
 		}
-		if (this.browser != null) await this.browser.close();
+		if (this.browser != null) {
+			await this.browser.close();
+			this.browser = null;
+			this.page = null;
+		}
 	}
 }

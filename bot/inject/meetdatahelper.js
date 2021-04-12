@@ -33,7 +33,15 @@
 		) : (x === y);
 	}
 
-	getMeetData();
-	moSetup();
+	function init() {
+		if (document.querySelector("h4.XIsaqe.isOLae") == null) {
+			document.querySelector("div.uArJ5e.UQuaGc.kCyAyd.QU4Gid.foXzLb.IeuGXd .NPEfkd.RveJvd.snByac").click();
+			setTimeout(init, 500);
+		} else {
+			getMeetData();
+			moSetup();
+		}
+	}
+	init();
 	console.log("MeetDataHelper injected");
 })();

@@ -5,5 +5,6 @@
             btn.click();
         }
     });
-    console.log("MiCCamHelper injected");
+    document.querySelector("div.uArJ5e.UQuaGc.Y5sE8d.uyXBBb.xKiqt .NPEfkd.RveJvd.snByac").click();
+    console.log("JoinHelper injected");
 })();
