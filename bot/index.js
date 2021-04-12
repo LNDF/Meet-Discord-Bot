@@ -35,16 +35,26 @@ async function meetData(params, message) {
 		message.channel.send("Error. Not in a Meet call.");
 		return;
 	}
-	let msg = "Currently in " + currentMeet.url
+	message.channel.send("Currently in " + currentMeet.url);
 	if (currentMeet.participants != null) {
+		let len = 0;
+		let msg = "\n\nParticipants:\n";
+		let pStrs = [];
+		len += msg.length;
+		pStrs.push(msg);
 		const part = Object.entries(currentMeet.participants);
-		const pStrs = [];
 		for (const p of part) {
-			pStrs.push(" - " + p[0] + " - microphone " + (p[1] ? "on" : "off"));
+			msg = " - " + p[0] + " - microphone " + (p[1] ? "on" : "off") + "\n";
+			len += msg.length;
+			if (len >= 2000) {
+				message.channel.send(pStrs.join(""));
+				pStrs = [];
+				len = msg.length;
+			}
+			pStrs.push(msg);
 		}
-		msg += "\n\nParticipants:\n" + pStrs.join("\n");
+		if (pStrs.length != 0) message.channel.send(pStrs.join(""));
 	}
-	message.channel.send(msg);
 }
 
 async function firstLoginSetup(params, message) {
